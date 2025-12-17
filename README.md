@@ -1,91 +1,84 @@
-# Cloudflare AI Incident Assistant
+# Cloudflare Incident Triage Assistant
 
-An AI-powered incident analysis assistant built on **Cloudflare Workers**, **Workers AI**, and **Durable Objects**.  
-This project simulates how engineering teams triage incidents during outages, regressions, or post-deployment issues.
-
----
-
-## 🚀 What This Project Does
-
-The AI Incident Assistant helps engineers:
-- Describe an incident in plain language
-- Receive **structured, actionable guidance** instead of generic answers
-- Maintain **conversation memory per incident/session**
-- Focus on diagnosis, next steps, and clarifying questions
-
-The assistant responds using a fixed incident-response structure:
-- **Summary**
-- **Likely Causes**
-- **Next Steps**
-- **Questions to Ask**
+A small incident-triage assistant built on **Cloudflare Workers**, **Workers AI**, and **Durable Objects**.  
+It’s designed to mirror how engineering teams investigate real production issues (deploy regressions, slowdowns, outages) by guiding a structured line of questioning and next steps.
 
 ---
 
-## 🧠 Key Features
+## What it does
 
-- **LLM-powered reasoning** using Cloudflare Workers AI (Llama)
-- **Durable Objects** for session-based memory
-- **Serverless API** built with Cloudflare Workers
-- **CORS-safe design** for browser-based usage
-- Support for multiple concurrent incident sessions (e.g. `demo`, `demo2`)
+You describe an incident in plain language. The assistant responds in a consistent engineering format:
 
----
+- **Summary** (what’s happening)
+- **Likely causes** (what commonly explains this pattern)
+- **Next steps** (what to check / change next)
+- **Questions to ask** (what information is needed to confirm root cause)
 
-## 🏗 Architecture Overview
-
-The application is split into three main components:
-
-### 1. Frontend (Static HTML)
-- Simple HTML + JavaScript UI
-- Allows users to submit incident descriptions
-- Sends requests to the Worker API via `POST /chat`
-- Uses a session name to maintain incident-specific memory
-
-The frontend is intentionally minimal to keep focus on backend architecture and Cloudflare primitives.
-
-### 2. Cloudflare Worker (Backend API)
-- Exposes a `/chat` endpoint
-- Handles request validation and CORS
-- Routes each request to a Durable Object based on session name
-
-### 3. Durable Object (ChatSession)
-- Stores conversation history per incident
-- Preserves short-term memory across messages
-- Enables parallel investigations without shared state conflicts
-
-### 4. Workers AI
-- Uses Cloudflare Workers AI (Llama model)
-- Receives structured prompts including conversation context
-- Generates practical, incident-focused responses
+The goal is practical triage and clearer debugging, not “chatbot-style” answers.
 
 ---
 
-## ☁️ Why Cloudflare?
+## Key features
 
-This project was intentionally built on Cloudflare to demonstrate how AI-powered developer tools can run globally at the edge without managing servers.
-
-- **Workers** provide fast, serverless request handling close to users
-- **Workers AI** enables native LLM inference on Cloudflare’s platform
-- **Durable Objects** allow stateful workflows without external databases
-
-Cloudflare’s architecture makes it well-suited for scalable, low-latency, AI-driven internal tools used by engineering teams.
+- **Workers AI (Llama)** used to generate the triage response
+- **Durable Objects** used to keep short-term context per incident session
+- **API-first design** via `POST /chat`
+- **Browser-friendly (CORS-safe)** so a simple frontend can call the API
+- Multiple sessions supported (e.g. `demo`, `demo2`) to run parallel investigations
 
 ---
 
-## ▶️ How It Works (Quick Overview)
+## Architecture (high level)
 
-1. A user submits an incident description via the frontend
-2. The request is sent to the Cloudflare Worker
-3. The Worker routes the request to a session-specific Durable Object
-4. Conversation context is retrieved and passed to Workers AI
-5. A structured response is returned as JSON and displayed in the UI
+### Frontend (static HTML)
+- Lightweight HTML + JavaScript UI
+- Sends incident messages to the backend using `POST /chat`
+- Uses a session name so each incident thread keeps its own context
+
+The frontend is intentionally minimal so the focus stays on the Cloudflare backend primitives.
+
+### Worker (API layer)
+- Exposes `/chat`
+- Validates requests and handles CORS
+- Routes requests to a session-specific Durable Object
+
+### Durable Object (ChatSession)
+- Stores recent conversation turns for that session
+- Preserves context across multi-step investigations
+- Avoids shared-state conflicts between different incident threads
+
+### Workers AI
+- Receives the current message + recent context
+- Returns a structured triage response
 
 ---
 
-## 🔮 Future Improvements
+## Why Cloudflare
 
-- Authentication for team-based usage
-- Incident severity classification
-- Integration with logs or metrics APIs
+This project is intentionally built on Cloudflare to demonstrate:
+
+- **Low-latency, global execution** with Workers
+- **Stateful workflows without a database** using Durable Objects
+- **LLM inference on-platform** using Workers AI
+
+This combination is a good fit for internal engineering tools that need to be fast, simple to operate, and easy to extend.
+
+---
+
+## Quick flow
+
+1. User enters an incident description in the frontend
+2. Frontend sends `POST /chat` to the Worker
+3. Worker forwards the request to a Durable Object for that session
+4. Durable Object loads recent context and calls Workers AI
+5. Response is returned as JSON and shown in the UI
+
+---
+
+## Possible next improvements
+
+- Authentication / access control for team usage
+- Incident severity tagging (e.g. P0–P3)
+- Integrations with logs/metrics sources
 - Streaming responses (SSE)
-- Richer frontend UI and formatting
+- A richer UI (formatting, history, export)
