@@ -1,55 +1,74 @@
 # Cloudflare Incident Triage Assistant
 
-A small incident-triage assistant built on **Cloudflare Workers**, **Workers AI**, and **Durable Objects**.  
-It’s designed to mirror how engineering teams investigate real production issues (deploy regressions, slowdowns, outages) by guiding a structured line of questioning and next steps.
+An incident triage assistant built using **Cloudflare Workers**, **Workers AI**, and **Durable Objects**.  
+The project explores how engineering teams investigate outages, regressions, and post-deployment performance issues in a structured and repeatable way.
 
 ---
 
-## What it does
+## Overview
 
-You describe an incident in plain language. The assistant responds in a consistent engineering format:
+This tool provides a lightweight workflow to support early-stage incident analysis.  
+Instead of returning generic chatbot-style answers, it guides engineers through a clear triage process.
 
-- **Summary** (what’s happening)
-- **Likely causes** (what commonly explains this pattern)
-- **Next steps** (what to check / change next)
-- **Questions to ask** (what information is needed to confirm root cause)
+Engineers can:
 
-The goal is practical triage and clearer debugging, not “chatbot-style” answers.
+- Describe an incident in plain language  
+- Receive structured guidance rather than open-ended responses  
+- Maintain short-term context per incident using session-based memory  
+- Focus on diagnosis, investigation steps, and follow-up questions  
 
----
-
-## Key features
-
-- **Workers AI (Llama)** used to generate the triage response
-- **Durable Objects** used to keep short-term context per incident session
-- **API-first design** via `POST /chat`
-- **Browser-friendly (CORS-safe)** so a simple frontend can call the API
-- Multiple sessions supported (e.g. `demo`, `demo2`) to run parallel investigations
+The assistant is designed to **support reasoning and investigation**, not replace existing debugging or monitoring tools.
 
 ---
 
-## Architecture (high level)
+## Key Features
 
-### Frontend (static HTML)
-- Lightweight HTML + JavaScript UI
-- Sends incident messages to the backend using `POST /chat`
-- Uses a session name so each incident thread keeps its own context
+- Structured incident analysis generated using **Cloudflare Workers AI (Llama)**
+- Session-based memory implemented with **Durable Objects**
+- Serverless API built on **Cloudflare Workers**
+- CORS-safe request handling for browser-based clients
+- Supports multiple concurrent incident sessions (e.g. `demo`, `demo2`)
 
-The frontend is intentionally minimal so the focus stays on the Cloudflare backend primitives.
+---
 
-### Worker (API layer)
-- Exposes `/chat`
-- Validates requests and handles CORS
-- Routes requests to a session-specific Durable Object
+## Architecture
+
+The application is intentionally split into clearly separated components to reflect a real-world production setup.
+
+### Frontend (Static HTML)
+
+- Lightweight HTML + JavaScript interface  
+- Sends incident descriptions to the backend using `POST /chat`  
+- Uses a session name so each incident thread maintains its own context  
+
+The frontend is deliberately minimal to keep the focus on backend architecture and Cloudflare primitives.
+
+---
+
+### Worker (API Layer)
+
+- Exposes a `/chat` endpoint  
+- Handles request validation and CORS  
+- Routes each request to a session-specific Durable Object  
+
+---
 
 ### Durable Object (ChatSession)
-- Stores recent conversation turns for that session
-- Preserves context across multi-step investigations
-- Avoids shared-state conflicts between different incident threads
+
+- Stores recent conversation turns for a single incident  
+- Preserves context across multi-step investigations  
+- Prevents shared-state conflicts between parallel sessions  
+
+---
 
 ### Workers AI
-- Receives the current message + recent context
-- Returns a structured triage response
+
+- Receives the current incident message along with recent context  
+- Returns a structured triage response:
+  - Summary  
+  - Likely causes  
+  - Next steps  
+  - Questions to ask  
 
 ---
 
@@ -57,28 +76,28 @@ The frontend is intentionally minimal so the focus stays on the Cloudflare backe
 
 This project is intentionally built on Cloudflare to demonstrate:
 
-- **Low-latency, global execution** with Workers
-- **Stateful workflows without a database** using Durable Objects
-- **LLM inference on-platform** using Workers AI
+- **Low-latency global execution** using Workers  
+- **Stateful workflows without a database** using Durable Objects  
+- **On-platform LLM inference** via Workers AI  
 
-This combination is a good fit for internal engineering tools that need to be fast, simple to operate, and easy to extend.
-
----
-
-## Quick flow
-
-1. User enters an incident description in the frontend
-2. Frontend sends `POST /chat` to the Worker
-3. Worker forwards the request to a Durable Object for that session
-4. Durable Object loads recent context and calls Workers AI
-5. Response is returned as JSON and shown in the UI
+This architecture is well-suited for internal engineering tools that need to be fast, simple to operate, and easy to extend without managing infrastructure.
 
 ---
 
-## Possible next improvements
+## Request Flow (High Level)
 
-- Authentication / access control for team usage
-- Incident severity tagging (e.g. P0–P3)
-- Integrations with logs/metrics sources
-- Streaming responses (SSE)
-- A richer UI (formatting, history, export)
+1. A user enters an incident description in the frontend  
+2. The frontend sends a `POST /chat` request to the Worker  
+3. The Worker forwards the request to a Durable Object based on session name  
+4. The Durable Object loads recent context and calls Workers AI  
+5. A structured response is returned as JSON and displayed in the UI  
+
+---
+
+## Possible Next Improvements
+
+- Authentication and access control for team usage  
+- Incident severity tagging (e.g. P0–P3)  
+- Integration with logs or metrics systems  
+- Streaming responses (SSE)  
+- Richer UI (history view, exports, formatting)  
