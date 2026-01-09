@@ -1,10 +1,10 @@
-# Cloudflare Incident Triage Assistant
+Cloudflare Incident Triage Assistant
 
 A lightweight incident triage tool built with Cloudflare Workers, Durable Objects, and Workers AI.
 
 It models how engineering teams handle early-stage incident investigation in a structured, repeatable way. The goal is not automated resolution, but helping engineers clarify what’s happening, what to check next, and what questions still need answering.
 
-## Overview
+Overview
 
 This tool supports the initial triage phase of an incident.
 
@@ -29,7 +29,7 @@ The assistant is designed to support investigation, not replace monitoring, aler
 
 Multiple incidents can be investigated in parallel, each maintaining its own short-term context.
 
-## Architecture
+Stateful incident conversations using Durable Objects
 
 The application is split into clear components.
 
@@ -41,7 +41,7 @@ The application is split into clear components.
 
 The frontend is intentionally minimal. The focus is the workflow and state management.
 
-### Worker (API Layer)
+Architecture
 
 - Exposes a single `/chat` endpoint
 - Handles request validation and CORS
@@ -53,7 +53,7 @@ The frontend is intentionally minimal. The focus is the workflow and state manag
 - Preserves context across multiple turns
 - Ensures isolation between concurrent investigations
 
-### Workers AI
+The frontend is deliberately minimal. The emphasis is on interaction flow and state management rather than visual complexity.
 
 - Receives the current message along with recent context
 - Produces a structured, conversational response focused on:
@@ -62,7 +62,7 @@ The frontend is intentionally minimal. The focus is the workflow and state manag
   - Suggesting investigation steps
   - Asking relevant follow-up questions
 
-## Why Cloudflare
+Handles request validation and CORS
 
 This project uses Cloudflare to explore how small internal tools can be built with minimal operational overhead.
 
